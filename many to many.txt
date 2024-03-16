@@ -1,0 +1,257 @@
+1. Develop a Hibernate application using many to many association using entities:
+
+  Product-Customer.
+
+Customer:-
+=======
+package com.ajp;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+
+@Entity
+public class Customer {
+
+	@Id
+	private Integer customerId;
+	private String customerName;
+	private String Address;
+	private Long mobileNo;
+	
+	@ManyToMany
+	@JoinTable(name = "Customer_Product", joinColumns = @JoinColumn(name = "CustomerId"), inverseJoinColumns = @JoinColumn(name = "ProductId"))
+	Set<Product> productset = new HashSet<Product>();
+	
+	public Customer() {
+
+	}
+
+	public Customer(Integer customerId, String customerName, String address, Long mobileNo, Set<Product> productset) {
+		super();
+		this.customerId = customerId;
+		this.customerName = customerName;
+		Address = address;
+		this.mobileNo = mobileNo;
+		this.productset = productset;
+	}
+
+	public Integer getCustomerId() {
+		return customerId;
+	}
+
+	public void setCustomerId(Integer customerId) {
+		this.customerId = customerId;
+	}
+
+	public String getCustomerName() {
+		return customerName;
+	}
+
+	public void setCustomerName(String customerName) {
+		this.customerName = customerName;
+	}
+
+	public String getAddress() {
+		return Address;
+	}
+
+	public void setAddress(String address) {
+		Address = address;
+	}
+
+	public Long getMobileNo() {
+		return mobileNo;
+	}
+
+	public void setMobileNo(Long mobileNo) {
+		this.mobileNo = mobileNo;
+	}
+
+	public Set<Product> getProductset() {
+		return productset;
+	}
+
+	public void setProductset(Set<Product> productset) {
+		this.productset = productset;
+	}
+	
+}
+====================================================================
+Product:-
+======
+package com.ajp;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+
+@Entity
+public class Product {
+	
+	@Id
+	private Integer productId;
+	private String productName;
+	private Integer price;
+	
+	@ManyToMany(mappedBy = "productset")
+	Set<Customer> customers = new HashSet<Customer>();
+	
+	public Product() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public Product(Integer productId, String productName, Integer price, Set<Customer> customers) {
+		super();
+		this.productId = productId;
+		this.productName = productName;
+		this.price = price;
+		this.customers = customers;
+	}
+
+	public Integer getProductId() {
+		return productId;
+	}
+
+	public void setProductId(Integer productId) {
+		this.productId = productId;
+	}
+
+	public String getProductName() {
+		return productName;
+	}
+
+	public void setProductName(String productName) {
+		this.productName = productName;
+	}
+
+	public Integer getPrice() {
+		return price;
+	}
+
+	public void setPrice(Integer price) {
+		this.price = price;
+	}
+
+	public Set<Customer> getCustomers() {
+		return customers;
+	}
+
+	public void setCustomers(Set<Customer> customers) {
+		this.customers = customers;
+	}
+	
+}
+====================================================================
+CustomerProductImpl:-
+===============
+package com.ajp;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+
+public class CustomerProductImpl {
+	
+	@SuppressWarnings("deprecation")
+	public static void main(String[] args) {
+		
+		StandardServiceRegistry ssregistry = new StandardServiceRegistryBuilder().configure("Config.xml").build();
+		Metadata metadata = new MetadataSources(ssregistry).getMetadataBuilder().build();
+		
+		SessionFactory sfactory = metadata.buildSessionFactory();
+		
+		Session session = sfactory.openSession();
+		Transaction transaction = session.beginTransaction();
+		
+		Customer c1 = new Customer();
+		c1.setCustomerId(3322);
+		c1.setCustomerName("Venky");
+		c1.setAddress("House No: 123, Newyork, US");
+		c1.setMobileNo(111234l);
+		
+		Customer c2 = new Customer();
+		c2.setCustomerId(3323);
+		c2.setCustomerName("Bhanu");
+		c2.setAddress("House No: 123, Newyork, US");
+		c2.setMobileNo(111234l);
+		
+		Product p1 = new Product();
+		p1.setProductId(111);
+		p1.setProductName("AC");
+		p1.setPrice(45000);
+		
+		Product p2 = new Product();
+		p2.setProductId(112);
+		p2.setProductName("TV");
+		p2.setPrice(35000);
+		
+		Product p3 = new Product();
+		p3.setProductId(113);
+		p3.setProductName("Refrigerator");
+		p3.setPrice(55000);
+		
+		c1.getProductset().add(p1);
+		c1.getProductset().add(p2);
+		
+		c2.getProductset().add(p1);
+		c2.getProductset().add(p3);
+		
+		session.save(c1);
+		session.save(c2);
+		session.save(p1);
+		session.save(p2);
+		session.save(p3);
+		
+		
+		transaction.commit();
+		session.close();
+		sfactory.close();
+		
+	}
+	
+}
+
+
+
+====================================================================
+Config.xml:-
+========
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-configuration>
+	<session-factory>
+	
+		<!-- Database connection settings -->
+		<property name = "hibernate.connection.driver_class">org.postgresql.Driver</property>
+		<property name = "hibernate.connection.url">jdbc:postgresql://localhost/anudip</property>
+		<property name = "hibernate.connection.username">postgres</property>
+		<property name = "hibernate.connection.password">Venky@123</property>
+		<property name = "hibernate.current_session_context_class">thread</property>
+	
+		<!-- JDBC connection pool settings -->
+		<property name="hibernate.c3p0.min_size">5</property>
+    	<property name="hibernate.c3p0.max_size">20</property>
+    	
+    	<!-- Other Hibernate properties -->
+    	<property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+    	<property name="hibernate.show_sql">true</property>
+    	<property name="hibernate.hbm2ddl.auto">update</property>
+			
+		<mapping class = "com.ajp.Customer" />
+		<mapping class = "com.ajp.Product" />
+			
+	</session-factory>
+</hibernate-configuration>
+

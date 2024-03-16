@@ -1,0 +1,243 @@
+Develop a hibernate application using one-to-one association
+For Entities Department and Department Head
+
+Department.java:-
+============
+package com.ajp.lab;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+
+@Entity
+@Table (name = "department")
+public class Department {
+	
+	@Id
+	private int departmentId;
+	private String departmentName;
+	private int noOfStaff;
+	private int departmentBudget;
+	
+	@OneToOne(targetEntity = DepartmentHead.class)
+	private DepartmentHead depthead;
+
+	public Department() {
+		super();
+	}
+
+	public Department(int departmentId, String departmentName, int noOfStaff, int departmentBudget,
+			DepartmentHead depthead) {
+		super();
+		this.departmentId = departmentId;
+		this.departmentName = departmentName;
+		this.noOfStaff = noOfStaff;
+		this.departmentBudget = departmentBudget;
+		this.depthead = depthead;
+	}
+
+	public int getDepartmentId() {
+		return departmentId;
+	}
+
+	public void setDepartmentId(int departmentId) {
+		this.departmentId = departmentId;
+	}
+
+	public String getDepartmentName() {
+		return departmentName;
+	}
+
+	public void setDepartmentName(String departmentName) {
+		this.departmentName = departmentName;
+	}
+
+	public int getNoOfStaff() {
+		return noOfStaff;
+	}
+
+	public void setNoOfStaff(int noOfStaff) {
+		this.noOfStaff = noOfStaff;
+	}
+
+	public int getDepartmentBudget() {
+		return departmentBudget;
+	}
+
+	public void setDepartmentBudget(int departmentBudget) {
+		this.departmentBudget = departmentBudget;
+	}
+
+	public DepartmentHead getDepthead() {
+		return depthead;
+	}
+
+	public void setDepthead(DepartmentHead depthead) {
+		this.depthead = depthead;
+	}
+	
+}
+===================================================================
+DepartmentHead.java:-
+================
+package com.ajp.lab;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
+
+@Entity
+public class DepartmentHead {
+
+	@Id
+	private Integer headId;
+	private String name;
+	private Integer experience;
+	private Double salary;
+	
+	@OneToOne(targetEntity = Department.class)
+	private Department dept;
+
+	public DepartmentHead() {
+		super();
+	}
+
+	public DepartmentHead(Integer headId, String name, Integer experience, Double salary, Department dept) {
+		super();
+		this.headId = headId;
+		this.name = name;
+		this.experience = experience;
+		this.salary = salary;
+		this.dept = dept;
+	}
+
+	public Integer getHeadId() {
+		return headId;
+	}
+
+	public void setHeadId(Integer headId) {
+		this.headId = headId;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Integer getExperience() {
+		return experience;
+	}
+
+	public void setExperience(Integer experience) {
+		this.experience = experience;
+	}
+
+	public Double getSalary() {
+		return salary;
+	}
+
+	public void setSalary(Double salary) {
+		this.salary = salary;
+	}
+
+	public Department getDept() {
+		return dept;
+	}
+
+	public void setDept(Department dept) {
+		this.dept = dept;
+	}
+	
+}
+====================================================================
+DepartmentImpl.java:-
+===============
+package com.ajp.lab;
+
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+
+public class DepartmentImpl {
+	
+	public static void main(String[] args) {
+		
+		StandardServiceRegistry ssregistry = new StandardServiceRegistryBuilder().configure("Config.xml").build();
+		Metadata metadata = new MetadataSources(ssregistry).getMetadataBuilder().build();
+		
+		SessionFactory sfactory = metadata.buildSessionFactory();
+		
+		Session session = sfactory.openSession();
+		Transaction transaction = session.beginTransaction();
+		
+		//object creation for DepartmentHead
+		DepartmentHead deptHead = new DepartmentHead();
+		deptHead.setHeadId(101);
+		deptHead.setName("Satish");
+		deptHead.setExperience(5);
+		deptHead.setSalary(50000.00);
+		
+		//object creation for Department
+		Department dept = new Department();
+		dept.setDepartmentId(5);
+		dept.setDepartmentName("CSE");
+		dept.setNoOfStaff(20);
+		dept.setDepartmentBudget(200000);
+		
+		//assigning departmentHead to the department
+		dept.setDeptHead(deptHead);
+		
+		//assigning department to departmentHead
+		deptHead.setDept(dept);
+		
+		//to create and insert the values to the tables
+		session.persist(dept);
+		session.persist(deptHead);
+		
+		//Committing the transaction
+		transaction.commit();
+		
+		//closing the session and sessionFactory object
+		session.close();
+		sfactory.close();
+		
+	}
+	
+}
+
+
+Config.xml:-
+========
+<?xml version="1.0" encoding="UTF-8"?>
+<hibernate-configuration>
+	<session-factory>
+	
+		<!-- Database connection settings -->
+		<property name = "hibernate.connection.driver_class">org.postgresql.Driver</property>
+		<property name = "hibernate.connection.url">jdbc:postgresql://localhost/anudip</property>
+		<property name = "hibernate.connection.username">postgres</property>
+		<property name = "hibernate.connection.password">Venky@123</property>
+		<property name = "hibernate.current_session_context_class">thread</property>
+	
+		<!-- JDBC connection pool settings -->
+		<property name="hibernate.c3p0.min_size">5</property>
+    	<property name="hibernate.c3p0.max_size">20</property>
+    	
+    	<!-- Other Hibernate properties -->
+    	<property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
+    	<property name="hibernate.show_sql">true</property>
+    	<property name="hibernate.hbm2ddl.auto">update</property>
+		
+		<mapping class = "com.ajp.lab.Department" />
+		<mapping class = "com.ajp.lab.DepartmentHead" />
+			
+	</session-factory>
+</hibernate-configuration>
